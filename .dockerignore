@@ -1,0 +1,6 @@
+target
+legacy
+.git
+*.md
+fly.toml
+render.yaml

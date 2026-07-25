@@ -1,0 +1,8 @@
+# Render blueprint. Push this repo to GitHub, then: New → Blueprint → select the repo.
+services:
+  - type: web
+    name: mulaim
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true

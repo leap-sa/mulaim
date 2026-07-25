@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release --verbose
+      - name: Test
+        run: cargo test --release --verbose
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t mulaim .
+      - name: Smoke test
+        run: |
+          docker run -d --rm -p 8080:8080 --name mulaim mulaim
+          sleep 3
+          curl -fsS http://127.0.0.1:8080/health
+          curl -fsS 'http://127.0.0.1:8080/api/check?model=12b' | grep -q '"best"'
+          docker stop mulaim
