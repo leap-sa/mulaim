@@ -10,7 +10,7 @@
 # Mulaim · مُلائم
 
 **Will that local LLM fit comfortably on your machine?**
-**هل سيعمل النموذج المحلي بارتياح على جهازك؟**
+**ماهو النموذج المناسب لجهازك ؟**
 
 [![Rust](https://img.shields.io/badge/Rust-2021-B7410E?logo=rust&logoColor=white)](Cargo.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f)](LICENSE)
