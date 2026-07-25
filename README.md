@@ -9,8 +9,8 @@
 
 # Mulaim · مُلائم
 
-**Will that local LLM fit comfortably on your machine?**
-**ماهو النموذج المناسب لجهازك ؟**
+**Will that local LLM fit comfortably on my machine, and how much left to be used?**
+**ماهو النموذج المناسب لجهازي، وهل أستطيع تشغيل خدمات أخرى؟**
 
 [![Rust](https://img.shields.io/badge/Rust-2021-B7410E?logo=rust&logoColor=white)](Cargo.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2ea44f)](LICENSE)
