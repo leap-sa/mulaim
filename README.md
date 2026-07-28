@@ -17,6 +17,7 @@
 [![Languages](https://img.shields.io/badge/UI-English%20%7C%20%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-37b3e3)](#بالعربية)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![By LEAP](https://img.shields.io/badge/by-LEAP%20RD%26O%20%D9%88%D8%A7%D8%AB%D8%A8-1d1d1d)](https://leap.sa)
+[Demo](https://molaim.leap.sa)
 
 One tiny Rust binary, three tools: a **CLI**, a **bilingual web app** (English / العربية, full RTL), and a **JSON API**.
 
@@ -33,7 +34,7 @@ Mulaim estimates whether a GGUF quantization (Q3_K_M → Q8_0) of a model runs c
 - **Best-fit verdict** — one clear answer per check (e.g. *Q6_K — Easy*), aligned with community quantization advice.
 - **Machine auto-detection** — real memory and chip via `sysctl` / `/proc/meminfo` when run locally; privacy-safe by design (see [Machine auto-detection](#machine-auto-detection)).
 - **Smart model resolution** — raw sizes, local **Ollama** models (true parameter counts), **Hugging Face** metadata (`safetensors` totals), then name parsing.
-- **Bilingual, RTL-first UI** — Arabic and English with one-tap switching, styled after the [leap.sa](https://leap.sa) design language (Cairo, `#1d1d1d`, `#37b3e3`).
+- **Bilingual, RTL-first UI** — Arabic and English with one-tap switching, [try_mulaim](https://molaim.leap.sa) styled after the [leap.sa](https://leap.sa) design language (Cairo, `#1d1d1d`, `#37b3e3`).
 - **Visual memory picture** — stacked memory-fit bars, quantization tables, and a side-workload matrix (programming, video editing, gaming).
 - **Non-tech friendly** — tap-to-pick memory chips with auto-set reserves; advanced fields tucked away.
 - **Ops friendly** — single static binary, stateless, `PORT`-aware, `/health` endpoint, Docker multi-stage build.
@@ -100,7 +101,7 @@ docker run --rm mulaim 12b                   # CLI
 docker compose up --build
 ```
 
-### Hosting handoff — [LEAP RD&O واثب](https://leap.sa)
+### Hosting handoff — [LEAP RD&O متاح على موقعنا](https://molaim.leap.sa)
 
 | Item | Value |
 |---|---|
