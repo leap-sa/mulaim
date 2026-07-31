@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ملائم — هل سيعمل النموذج المحلي بارتياح على جهازك؟ · Mulaim — estimate whether a local LLM fits comfortably on your machine. English / العربية">
+<meta name="author" content="LEAP RD&O واثب — leap.sa">
+<meta name="generator" content="Mulaim ملائم — LEAP RD&O واثب">
+<meta property="og:title" content="Mulaim · ملائم">
+<meta property="og:site_name" content="LEAP RD&O واثب">
+<meta property="og:description" content="هل سيعمل النموذج المحلي بارتياح على جهازك؟ · Will that local LLM fit comfortably on your machine?">
+<meta name="theme-color" content="#1d1d1d">
+<title>Mulaim · ملائم — local LLM fit checker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%231d1d1d'/%3E%3Cpath d='M50 18L82 50 50 82 18 50z' fill='%2337b3e3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f5f5f5;
+  --surface: #ffffff;
+  --ink: #1d1d1d;
+  --ink-2: #555555;
+  --muted: #8a8a8a;
+  --grid: #e8e6e1;
+  --baseline: #cecece;
+  --ring: rgba(29, 29, 29, 0.08);
+  --accent: #37b3e3;
+  --accent-deep: #1f8fbe;
+  --on-accent: #1d1d1d;
+  --seg-os: #6a7785;
+  --seg-docker: #cecece;
+  --good: #0ca30c;
+  --warn: #fab219;
+  --crit: #d03b3b;
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  --float-shadow: 0 25px 80px rgba(0, 0, 0, 0.18);
+  --page-bg:
+    radial-gradient(900px 500px at 92% -40px, rgba(55, 179, 227, 0.10), transparent 62%),
+    radial-gradient(760px 520px at -4% 46%, rgba(55, 179, 227, 0.06), transparent 60%),
+    #f5f5f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #141414;
+    --surface: #1d1d1d;
+    --ink: #ffffff;
+    --ink-2: #cecece;
+    --muted: #8a8a8a;
+    --grid: #2e2e2e;
+    --baseline: #3a3a3a;
+    --ring: rgba(255, 255, 255, 0.08);
+    --accent: #37b3e3;
+    --accent-deep: #37b3e3;
+    --on-accent: #1d1d1d;
+    --seg-os: #6a7785;
+    --seg-docker: #3f3f3f;
+    --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    --float-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+    --page-bg:
+      radial-gradient(900px 500px at 92% -40px, rgba(55, 179, 227, 0.12), transparent 62%),
+      radial-gradient(760px 520px at -4% 46%, rgba(55, 179, 227, 0.07), transparent 60%),
+      #141414;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #141414;
+  --surface: #1d1d1d;
+  --ink: #ffffff;
+  --ink-2: #cecece;
+  --muted: #8a8a8a;
+  --grid: #2e2e2e;
+  --baseline: #3a3a3a;
+  --ring: rgba(255, 255, 255, 0.08);
+  --accent: #37b3e3;
+  --accent-deep: #37b3e3;
+  --on-accent: #1d1d1d;
+  --seg-os: #6a7785;
+  --seg-docker: #3f3f3f;
+  --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  --float-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  --page-bg:
+    radial-gradient(900px 500px at 92% -40px, rgba(55, 179, 227, 0.12), transparent 62%),
+    radial-gradient(760px 520px at -4% 46%, rgba(55, 179, 227, 0.07), transparent 60%),
+    #141414;
+}
+
+:root {
+  --leap-on-light: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20id=%22Layer_1%22%20style=%22max-height:%20500px%22%20version=%221.1%22%20x=%220px%22%20y=%220px%22%20transform=%22rotate(0)%20scale(1,%201)%22%20viewBox=%22334.8%20748%201419.2%20504%22%3E%20%3Cstyle%20type=%22text/css%22%3E.st0%20%7B%20fill:%20%231d1d1d%3B%20%7D.st1%20%7B%20fill:%20%2338b4e4%3B%20%7D.st2%20%7B%20fill:%20%23ed1919%3B%20%7D.st3%20%7B%20fill:%20%23b30000%3B%20%7D%3C/style%3E%20%3Cg%3E%20%3Cg%3E%20%3Cpath%20class=%22st0%22%20d=%22M364.5,1214.5c-5.2-5.2-7.8-11.4-7.8-18.6V813.3c0-28.1,16.9-42.2,50.8-42.2v406.3h165.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc12.6,0,22.3,3.9,29.2,11.6c6.8,7.8,10.3,18.8,10.3,33.2H383.2C376,1222.3,369.8,1219.7,364.5,1214.5z%22%20fill=%22%23e00000%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M687.6,867.8c0-6.8,2.5-12.5,7.6-17c5-4.5,11.2-6.8,18.4-6.8H953c0,15.1-3.1,26.3-9.2,33.5%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-6.1,7.2-15.7,10.8-28.6,10.8H738.4v121.1h151.3c0,15.1-3.1,26.3-9.2,33.5c-6.1,7.2-15.5,10.8-28.1,10.8h-114V1178h188.1%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc12.6,0,22,3.6,28.1,10.8c6.1,7.2,9.2,18.4,9.2,33.5H713.6c-7.2,0-13.3-2.2-18.4-6.8c-5.1-4.5-7.6-10.2-7.6-17V867.8z%22%20fill=%22%23e00000%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M1449.3,867.8c0-6.8,2.4-12.5,7.3-17c4.9-4.5,11.1-6.8,18.6-6.8h157.8c23.8,0,44.9,5,63.2,14.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc18.4,9.9,32.6,23.8,42.7,41.6c10.1,17.8,15.1,38.3,15.1,61.3c0,23.8-5,44.7-14.9,62.7c-9.9,18-24,31.9-42.4,41.6%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-18.4,9.7-39.6,14.6-63.8,14.6h-133V1185c0,13.7-4.3,24.1-13,31.3c-8.6,7.2-21.3,10.8-37.8,10.8V867.8z%20M1633.1,1035.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc21.6,0,38.7-6.6,51.3-19.7c12.6-13.1,18.9-31.3,18.9-54.3c0-22.3-6.4-40.1-19.2-53.2c-12.8-13.1-29.8-19.7-51.1-19.7h-133v147%26%2310%3B%26%239%3B%26%239%3B%26%239%3BH1633.1z%22%20fill=%22%23e00000%22/%3E%20%3C/g%3E%20%3Ccircle%20class=%22st0%22%20cx=%22384.6%22%20cy=%22797.8%22%20r=%2249.8%22%20fill=%22%23e00000%22/%3E%20%3Ccircle%20class=%22st0%22%20cx=%22567.9%22%20cy=%221202.2%22%20r=%2249.8%22%20fill=%22%23e00000%22/%3E%20%3Cg%3E%20%3Cg%3E%20%3Cpath%20class=%22st1%22%20d=%22M1190.5,854.5c4.3-10.8,12.6-16.2,24.9-16.2c11.5,0,19.6,5.4,24.3,16.2l129.2,310.8%26%2310%3B%26%239%3B%26%239%3B%26%239%3B%26%239%3Bc3.2,7.6,4.9,14.8,4.9,21.6c0,9.7-3.7,18.9-9.8,26.1c-6.1,7.2-14.7,12.3-25.5,14.4l-46.7-113.9%20M1212.7,919.3%20M1277,1069.6%22%20fill=%22%23e00000%22/%3E%20%3C/g%3E%20%3C/g%3E%20%3Cg%3E%20%3Cpath%20class=%22st0%22%20d=%22M1207.3,1074.7c0-1.4,0.2-2.7,0.5-4l-71.5-0.3l68.6-141.5c-12-28,0,0-12-28c-3.7-8.7,1,3-8-20%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-0.5-1.3-3-8-4-10l-136.5,295.1c-3.2,7.6-4.9,14.8-4.9,21.6c0,10.1,3.1,18.6,9.2,25.7c6.1,7,14.6,11.6,25.4,13.8l46.5-113h89.3%26%2310%3B%26%239%3B%26%239%3B%26%239%3BC1209.3,1101,1207.4,1087.9,1207.3,1074.7z%22%20fill=%22%23e00000%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M1260.9,1069.9l-136.7-0.8c2.5,8.4,0.2,18.7,3.7,26.8c1,1.5-46.6,4-45.6,5.5c3.1,2.6,55.3,3.8,58.5,6.3%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc3.6,2.8-33,3.7-30,7.2l169,1c-1-3,0,0-1-3%22%20fill=%22%23e00000%22/%3E%20%3C/g%3E%20%3C/g%3E%20%3C/svg%3E");
+  --leap-on-dark: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20id=%22Layer_1%22%20style=%22max-height:%20500px%22%20version=%221.1%22%20x=%220px%22%20y=%220px%22%20transform=%22rotate(0)%20scale(1,%201)%22%20viewBox=%22334.8%20748%201419.2%20504%22%3E%20%3Cstyle%20type=%22text/css%22%3E.st0%20%7B%20fill:%20%23ffffff%3B%20%7D.st1%20%7B%20fill:%20%23a9a9a9%3B%20%7D.st2%20%7B%20fill:%20%23cccccc%3B%20%7D.st3%20%7B%20fill:%20%23b9b9b9%3B%20%7D%3C/style%3E%20%3Cg%3E%20%3Cg%3E%20%3Cpath%20class=%22st0%22%20d=%22M364.5,1214.5c-5.2-5.2-7.8-11.4-7.8-18.6V813.3c0-28.1,16.9-42.2,50.8-42.2v406.3h165.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc12.6,0,22.3,3.9,29.2,11.6c6.8,7.8,10.3,18.8,10.3,33.2H383.2C376,1222.3,369.8,1219.7,364.5,1214.5z%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M687.6,867.8c0-6.8,2.5-12.5,7.6-17c5-4.5,11.2-6.8,18.4-6.8H953c0,15.1-3.1,26.3-9.2,33.5%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-6.1,7.2-15.7,10.8-28.6,10.8H738.4v121.1h151.3c0,15.1-3.1,26.3-9.2,33.5c-6.1,7.2-15.5,10.8-28.1,10.8h-114V1178h188.1%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc12.6,0,22,3.6,28.1,10.8c6.1,7.2,9.2,18.4,9.2,33.5H713.6c-7.2,0-13.3-2.2-18.4-6.8c-5.1-4.5-7.6-10.2-7.6-17V867.8z%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M1449.3,867.8c0-6.8,2.4-12.5,7.3-17c4.9-4.5,11.1-6.8,18.6-6.8h157.8c23.8,0,44.9,5,63.2,14.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc18.4,9.9,32.6,23.8,42.7,41.6c10.1,17.8,15.1,38.3,15.1,61.3c0,23.8-5,44.7-14.9,62.7c-9.9,18-24,31.9-42.4,41.6%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-18.4,9.7-39.6,14.6-63.8,14.6h-133V1185c0,13.7-4.3,24.1-13,31.3c-8.6,7.2-21.3,10.8-37.8,10.8V867.8z%20M1633.1,1035.9%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc21.6,0,38.7-6.6,51.3-19.7c12.6-13.1,18.9-31.3,18.9-54.3c0-22.3-6.4-40.1-19.2-53.2c-12.8-13.1-29.8-19.7-51.1-19.7h-133v147%26%2310%3B%26%239%3B%26%239%3B%26%239%3BH1633.1z%22/%3E%20%3C/g%3E%20%3Ccircle%20class=%22st0%22%20cx=%22384.6%22%20cy=%22797.8%22%20r=%2249.8%22/%3E%20%3Ccircle%20class=%22st0%22%20cx=%22567.9%22%20cy=%221202.2%22%20r=%2249.8%22/%3E%20%3Cg%3E%20%3Cg%3E%20%3Cpath%20class=%22st1%22%20d=%22M1190.5,854.5c4.3-10.8,12.6-16.2,24.9-16.2c11.5,0,19.6,5.4,24.3,16.2l129.2,310.8%26%2310%3B%26%239%3B%26%239%3B%26%239%3B%26%239%3Bc3.2,7.6,4.9,14.8,4.9,21.6c0,9.7-3.7,18.9-9.8,26.1c-6.1,7.2-14.7,12.3-25.5,14.4l-46.7-113.9%20M1212.7,919.3%20M1277,1069.6%22/%3E%20%3C/g%3E%20%3C/g%3E%20%3Cg%3E%20%3Cpath%20class=%22st0%22%20d=%22M1207.3,1074.7c0-1.4,0.2-2.7,0.5-4l-71.5-0.3l68.6-141.5c-12-28,0,0-12-28c-3.7-8.7,1,3-8-20%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc-0.5-1.3-3-8-4-10l-136.5,295.1c-3.2,7.6-4.9,14.8-4.9,21.6c0,10.1,3.1,18.6,9.2,25.7c6.1,7,14.6,11.6,25.4,13.8l46.5-113h89.3%26%2310%3B%26%239%3B%26%239%3B%26%239%3BC1209.3,1101,1207.4,1087.9,1207.3,1074.7z%22/%3E%20%3Cpath%20class=%22st0%22%20d=%22M1260.9,1069.9l-136.7-0.8c2.5,8.4,0.2,18.7,3.7,26.8c1,1.5-46.6,4-45.6,5.5c3.1,2.6,55.3,3.8,58.5,6.3%26%2310%3B%26%239%3B%26%239%3B%26%239%3Bc3.6,2.8-33,3.7-30,7.2l169,1c-1-3,0,0-1-3%22/%3E%20%3C/g%3E%20%3C/g%3E%20%3C/svg%3E");
+  --leap-footer: var(--leap-on-light);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) { --leap-footer: var(--leap-on-dark); }
+}
+:root[data-theme="dark"] { --leap-footer: var(--leap-on-dark); }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--page-bg);
+  color: var(--ink);
+  font-family: "Cairo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding-inline: 20px; }
+
+/* ---- hero: always dark, leap.sa gradient + neon glows ---- */
+.hero {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  padding-block: 48px 112px;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='26'%20height='26'%3E%3Ccircle%20cx='1.5'%20cy='1.5'%20r='1.2'%20fill='%23ffffff'%20fill-opacity='0.16'/%3E%3C/svg%3E");
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 85%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 85%);
+  pointer-events: none;
+}
+.hero > .wrap { position: relative; }
+header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.wordmark { margin: 0; display: flex; flex-direction: column; }
+.wordmark .ar-mark { font-size: 52px; font-weight: 900; line-height: 1.15; }
+.wordmark .latin { font-size: 13px; font-weight: 700; letter-spacing: 0.45em; color: #37b3e3; text-transform: uppercase; }
+.brand p { margin: 14px 0 0; color: #cecece; max-width: 58ch; font-size: 16.5px; font-weight: 400; }
+
+.seg { display: inline-flex; flex: none; border-radius: 999px; background: rgba(255, 255, 255, 0.10); padding: 4px; gap: 2px; }
+.seg button {
+  border: none; background: transparent; color: #cecece; font: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 5px 18px; border-radius: 999px; cursor: pointer; transition: color 0.15s ease, background 0.15s ease;
+}
+.seg button[aria-pressed="true"] { background: #37b3e3; color: #1d1d1d; font-weight: 700; }
+.seg button:not([aria-pressed="true"]):hover { color: #ffffff; }
+
+.top-side { display: flex; flex-direction: column; align-items: flex-end; gap: 16px; flex: none; }
+.leap-link { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; font-size: 13px; }
+.leap-link:hover { opacity: 0.85; }
+.leap-mark { display: inline-block; inline-size: 96px; block-size: 34px; background: var(--leap-footer) center / contain no-repeat; }
+.hero .leap-mark { background-image: var(--leap-on-dark); }
+footer .leap-mark { inline-size: 84px; block-size: 30px; }
+footer .leap-link { color: var(--muted); }
+
+/* ---- main: floats over hero edge (positioned so it paints above the hero) ---- */
+main.wrap { position: relative; z-index: 1; margin-block-start: -78px; padding-block-end: 40px; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--ring); border-radius: 20px;
+  padding: 26px; margin-block-end: 18px; box-shadow: var(--card-shadow);
+}
+.card.form-card { box-shadow: var(--float-shadow); }
+
+form .grid { display: grid; gap: 18px; }
+.field-model { grid-column: 1 / -1; }
+label, .lbl { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin-block-end: 6px; }
+
+.mem-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.mem-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.mem-chips button {
+  border: 1px solid var(--baseline); background: var(--page); color: var(--ink-2);
+  border-radius: 999px; padding: 7px 17px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.mem-chips button:hover { border-color: var(--accent); color: var(--ink); }
+.mem-chips button[aria-pressed="true"] {
+  background: var(--accent); border-color: var(--accent); color: var(--on-accent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+details.help { position: relative; }
+details.help summary { list-style: none; cursor: pointer; color: var(--accent-deep); font-size: 13px; font-weight: 700; }
+details.help summary::-webkit-details-marker { display: none; }
+details.help p {
+  position: absolute; inset-inline-end: 0; top: 26px; z-index: 5; margin: 0;
+  width: min(340px, 82vw); background: var(--surface); border: 1px solid var(--ring); border-radius: 12px;
+  padding: 11px 15px; font-size: 13px; line-height: 1.7; color: var(--ink-2); box-shadow: var(--float-shadow);
+}
+
+details.adv { margin-block-start: 18px; }
+details.adv summary { list-style: none; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+details.adv summary::-webkit-details-marker { display: none; }
+details.adv summary::before { content: "▸"; font-size: 11px; transition: transform 0.15s ease; }
+[dir="rtl"] details.adv summary::before { content: "◂"; }
+details.adv[open] summary::before { transform: rotate(90deg); }
+[dir="rtl"] details.adv[open] summary::before { transform: rotate(-90deg); }
+.adv-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-block-start: 14px; }
+input[type="text"], input[type="number"] {
+  width: 100%; padding: 11px 16px; font: inherit; color: var(--ink);
+  background: var(--page); border: 1px solid transparent; border-radius: 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+input:hover { border-color: var(--baseline); }
+input:focus-visible {
+  outline: none; border-color: var(--accent); background: var(--surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input.model-input { direction: ltr; text-align: left; }
+.form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-block-start: 18px; }
+button.check {
+  border: none; border-radius: 999px; padding: 11px 34px; font: inherit; font-size: 16px; font-weight: 800;
+  background: var(--accent); color: var(--on-accent); cursor: pointer;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+button.check:hover { background: #7fd3f3; transform: translateY(-1px); }
+button.check:active { transform: translateY(0); }
+button.check:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.examples { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; color: var(--muted); font-size: 13.5px; }
+.examples button {
+  border: 1px solid var(--baseline); background: transparent; color: var(--ink-2);
+  border-radius: 999px; padding: 4px 14px; font-size: 13px; font-weight: 600; cursor: pointer; direction: ltr;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.examples button:hover { border-color: var(--accent); color: var(--ink); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+.banner { border-radius: 14px; padding: 13px 18px; margin-block-end: 18px; font-size: 14.5px; font-weight: 500; }
+.banner.error { background: color-mix(in srgb, var(--crit) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--crit) 35%, transparent); }
+.banner.info { background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); color: var(--ink-2); }
+.hidden { display: none; }
+
+.card.verdict {
+  background:
+    radial-gradient(420px 220px at 88% -30%, rgba(55, 179, 227, 0.28), transparent 65%),
+    linear-gradient(135deg, #1d1d1d 0%, #2d2d2d 100%);
+  border-color: rgba(55, 179, 227, 0.35);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.verdict .eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #37b3e3; }
+[dir="rtl"] .verdict .eyebrow { letter-spacing: 0; text-transform: none; }
+.v-quant { font-size: 42px; font-weight: 900; color: #37b3e3; line-height: 1.15; }
+.v-quant.none { font-size: 19px; color: #ffffff; font-weight: 700; max-width: 34ch; line-height: 1.5; }
+.v-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; }
+.v-note { font-size: 13px; color: #cecece; font-variant-numeric: tabular-nums; }
+.verdict .chip { color: #ffffff; }
+.verdict .chip.possible .ic { color: var(--warn); }
+
+.detected { font-size: 13px; color: var(--muted); }
+.detected::before { content: "●"; color: var(--accent); font-size: 8px; vertical-align: 2px; margin-inline-end: 6px; }
+
+.resolution { color: var(--ink-2); font-size: 14px; margin: 0 6px 12px; }
+.resolution b { color: var(--ink); }
+.resolution .note { display: block; color: var(--muted); font-size: 13px; }
+
+.callout .eyebrow { font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-deep); margin-block-end: 4px; }
+[dir="rtl"] .callout .eyebrow { letter-spacing: 0; text-transform: none; }
+.callout p { margin: 0; max-width: 72ch; font-weight: 500; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-block-end: 18px; }
+.stat { background: var(--surface); border: 1px solid var(--ring); border-radius: 20px; padding: 16px 20px; box-shadow: var(--card-shadow); }
+.stat .lbl { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.stat .val { font-size: 26px; font-weight: 800; margin-top: 2px; line-height: 1.3; }
+.stat .val small { font-size: 13px; font-weight: 500; color: var(--muted); }
+.stat.hero-stat { background: linear-gradient(135deg, #1d1d1d 0%, #2d2d2d 100%); border-color: rgba(55, 179, 227, 0.35); }
+.stat.hero-stat .lbl { color: #cecece; }
+.stat.hero-stat .val { color: #37b3e3; }
+.stat.hero-stat .val small { color: #8a8a8a; }
+
+h2 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+h2::after { content: ""; display: block; inline-size: 26px; block-size: 3px; border-radius: 999px; background: var(--accent); margin-block: 6px 12px; }
+.scroll-x { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th { text-align: start; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 7px 12px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+td.num { font-variant-numeric: tabular-nums; text-align: end; white-space: nowrap; }
+td.qname, th.qcol { font-weight: 700; white-space: nowrap; direction: ltr; }
+[dir="rtl"] td.qname { text-align: end; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 13px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.chip .ic { font-size: 12px; line-height: 1; }
+.chip.easy { background: color-mix(in srgb, var(--good) 12%, transparent); }
+.chip.easy .ic { color: var(--good); }
+.chip.possible { background: color-mix(in srgb, var(--warn) 18%, transparent); }
+.chip.possible .ic { color: color-mix(in srgb, var(--warn) 70%, var(--ink)); }
+.chip.tight { background: color-mix(in srgb, var(--crit) 11%, transparent); }
+.chip.tight .ic { color: var(--crit); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; font-weight: 500; color: var(--ink-2); margin-block-end: 14px; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { inline-size: 11px; block-size: 11px; border-radius: 4px; display: inline-block; }
+.sw.os { background: var(--seg-os); }
+.sw.docker { background: var(--seg-docker); }
+.sw.model { background: var(--accent-deep); }
+.sw.free { background: var(--grid); }
+
+.bar-row { margin-block-end: 15px; }
+.bar-row:last-child { margin-block-end: 0; }
+.bar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13.5px; margin-block-end: 5px; }
+.bar-head .q { font-weight: 700; direction: ltr; }
+.bar-head .v { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.bar-head .over { color: var(--crit); font-weight: 700; }
+.bar-track { display: flex; gap: 2px; block-size: 12px; background: var(--grid); border-radius: 999px; overflow: hidden; }
+.seg-b { block-size: 100%; min-inline-size: 2px; }
+.seg-b.os { background: var(--seg-os); }
+.seg-b.docker { background: var(--seg-docker); }
+.seg-b.model { background: var(--accent-deep); border-start-end-radius: 999px; border-end-end-radius: 999px; }
+
+.wl-name { font-weight: 700; }
+.wl-sub { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+ul.interp { margin: 0; padding-inline-start: 20px; color: var(--ink-2); font-size: 14.5px; }
+ul.interp li { margin-block-end: 6px; }
+ul.interp b { color: var(--ink); }
+
+.dev p { margin: 0 0 10px; color: var(--ink-2); max-width: 72ch; }
+ul.dev-points { margin: 0 0 16px; padding-inline-start: 20px; color: var(--ink-2); font-size: 14.5px; }
+ul.dev-points li { margin-block-end: 4px; }
+.dev-cmds { display: grid; gap: 10px; }
+.cmd { display: grid; gap: 4px; }
+.cmd-lbl { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.cmd pre {
+  margin: 0; padding: 12px 16px; border-radius: 12px; overflow-x: auto;
+  background: linear-gradient(135deg, #1d1d1d 0%, #2d2d2d 100%);
+  color: #e8e6e1; font-size: 13px; line-height: 1.6;
+  direction: ltr; text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.cmd pre .cm { color: #8a8a8a; }
+.cmd pre .hl { color: #7fd3f3; }
+
+footer { color: var(--muted); font-size: 13.5px; margin-block-start: 30px; padding-block-start: 18px; border-block-start: 1px solid var(--grid); display: flex; flex-direction: column; gap: 6px; }
+footer code { direction: ltr; unicode-bidi: embed; background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 2px 8px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+@media (max-width: 640px) {
+  .adv-grid { grid-template-columns: 1fr; }
+  header.top { flex-direction: column; }
+  .top-side { order: -1; align-self: flex-end; flex-direction: row; align-items: center; }
+  .wordmark .ar-mark { font-size: 40px; }
+  .hero { padding-block: 32px 96px; }
+  .card { padding: 20px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .seg-b { transition: inline-size 0.35s ease; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <h1 class="wordmark"><span class="ar-mark">ملائم</span><span class="latin">Mulaim</span></h1>
+        <p id="tagline"></p>
+      </div>
+      <div class="top-side">
+        <div class="seg" role="group" aria-label="Language / اللغة">
+          <button type="button" data-l="ar">عربي</button>
+          <button type="button" data-l="en">EN</button>
+        </div>
+        <a class="leap-link" href="https://leap.sa" target="_blank" rel="noopener">
+          <span class="leap-mark" role="img" aria-label="LEAP RD&amp;O واثب"></span>
+        </a>
+      </div>
+    </header>
+  </div>
+</div>
+
+<main class="wrap">
+
+<section class="card form-card">
+  <form id="form" novalidate>
+    <div class="grid">
+      <div class="field-model">
+        <label for="model" id="l_model"></label>
+        <input type="text" id="model" class="model-input" value="12b" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field-mem">
+        <div class="mem-head">
+          <span class="lbl" id="l_mem"></span>
+          <details class="help">
+            <summary id="helpQ"></summary>
+            <p id="helpTxt"></p>
+          </details>
+        </div>
+        <div class="mem-chips" id="memChips"></div>
+      </div>
+    </div>
+    <details class="adv">
+      <summary id="advLbl"></summary>
+      <div class="adv-grid">
+        <div>
+          <label for="total" id="l_total"></label>
+          <input type="number" id="total" value="64" min="4" max="4096" step="any">
+        </div>
+        <div>
+          <label for="os" id="l_os"></label>
+          <input type="number" id="os" value="10" min="0" max="4096" step="any">
+        </div>
+        <div>
+          <label for="docker" id="l_docker"></label>
+          <input type="number" id="docker" value="8" min="0" max="4096" step="any">
+        </div>
+      </div>
+    </details>
+    <div class="form-foot">
+      <button class="check" id="checkBtn" type="submit"></button>
+      <div class="examples">
+        <span id="tryLbl"></span>
+        <button type="button" data-ex="12b">12b</button>
+        <button type="button" data-ex="qwen3:14b">qwen3:14b</button>
+        <button type="button" data-ex="gemma3:27b">gemma3:27b</button>
+        <button type="button" data-ex="llama3.1:8b">llama3.1:8b</button>
+      </div>
+      <span class="detected hidden" id="detectedNote"></span>
+    </div>
+  </form>
+</section>
+
+<div id="errBanner" class="banner error hidden" role="alert"></div>
+<div id="localBanner" class="banner info hidden"></div>
+
+<div id="results" class="hidden" aria-live="polite">
+  <p class="resolution" id="resolution"></p>
+
+  <section class="card verdict">
+    <div class="v-main">
+      <div class="eyebrow" id="verdictTitle"></div>
+      <div class="v-quant" id="verdictQuant"></div>
+    </div>
+    <div class="v-side" id="verdictSide"></div>
+  </section>
+
+  <section class="card callout">
+    <div class="eyebrow" id="recTitle"></div>
+    <p id="recText"></p>
+  </section>
+
+  <div class="stats" id="stats"></div>
+
+  <section class="card">
+    <h2 id="quantsTitle"></h2>
+    <div class="scroll-x">
+      <table id="quantTable"></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 id="barsTitle"></h2>
+    <div class="legend" id="barLegend"></div>
+    <div id="bars"></div>
+  </section>
+
+  <section class="card">
+    <h2 id="wlTitle"></h2>
+    <div class="scroll-x">
+      <table id="wlTable"></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 id="interpTitle"></h2>
+    <ul class="interp" id="interpList"></ul>
+  </section>
+</div>
+
+<section class="card dev">
+  <h2 id="devTitle"></h2>
+  <p id="devIntro"></p>
+  <ul class="dev-points">
+    <li id="devP1"></li>
+    <li id="devP2"></li>
+    <li id="devP3"></li>
+  </ul>
+  <div class="dev-cmds">
+    <div class="cmd">
+      <span class="cmd-lbl" id="devWebLbl"></span>
+      <pre><code>cargo run --release -- serve   <span class="cm"># then open</span> <span class="hl">http://localhost:8080</span></code></pre>
+    </div>
+    <div class="cmd">
+      <span class="cmd-lbl" id="devCliLbl"></span>
+      <pre><code>mulaim qwen3:14b               <span class="cm"># or machine-readable:</span> mulaim 12b --json</code></pre>
+    </div>
+    <div class="cmd">
+      <span class="cmd-lbl" id="devDockerLbl"></span>
+      <pre><code>docker build -t mulaim . &amp;&amp; docker run --rm -p 8080:8080 mulaim</code></pre>
+    </div>
+    <div class="cmd">
+      <span class="cmd-lbl" id="devApiLbl"></span>
+      <pre><code>curl 'http://localhost:8080/api/check?model=qwen3:14b'</code></pre>
+    </div>
+  </div>
+</section>
+
+<noscript><p>هذه الصفحة تتطلب JavaScript. · This page needs JavaScript.</p></noscript>
+
+<footer>
+  <span id="disclaimer"></span>
+  <span><span id="apiHint"></span> <code>GET /api/check?model=qwen3:14b&amp;total=64&amp;os=10&amp;docker=8</code></span>
+  <span id="footerMade"></span>
+  <a class="leap-link" href="https://leap.sa" target="_blank" rel="noopener">
+    <span id="hostedBy"></span>
+    <span class="leap-mark" role="img" aria-label="LEAP RD&amp;O واثب"></span>
+  </a>
+</footer>
+
+</main>
+
+<script>
+"use strict";
+
+/* ---------- i18n ---------- */
+const I18N = {
+  en: {
+    title: "Mulaim · ملائم — local LLM fit checker",
+    tagline: "Will that local LLM fit comfortably on your machine? Estimate GGUF quantization memory against your unified memory, Docker, and side workloads.",
+    l_model: "Model name or size",
+    model_ph: "12b · qwen3:14b · unsloth/Qwen3-14B-GGUF",
+    l_mem: "How much memory does your device have?",
+    help_q: "Not sure?",
+    help_txt: "Mac: Apple menu → About This Mac. Windows: Settings → System → About. Look for “Memory (RAM)”.",
+    adv: "Advanced settings (reserves are set automatically)",
+    l_total: "Total unified memory (GB)",
+    l_os: "Reserved for OS (GB)",
+    l_docker: "Reserved for Docker (GB)",
+    check: "Check fit",
+    checking: "Checking…",
+    try: "Try:",
+    resolved: "Resolved via",
+    params: (x) => `${x}B params`,
+    source_direct: "direct size input",
+    source_local_ollama: "local Ollama",
+    source_hf_direct: "Hugging Face",
+    source_hf_search: "Hugging Face search",
+    source_name_only: "name parsing",
+    note_direct: "Parameter count supplied directly.",
+    note_ollama: "Resolved from the local Ollama API.",
+    note_ollama_tags: "Matched against your local Ollama model list.",
+    note_hf_direct: "Resolved from the Hugging Face model endpoint.",
+    note_hf_search: "Resolved via Hugging Face search; closest match picked.",
+    note_name_only: "No local or remote metadata; size read from the name itself.",
+    local_note: "Computed in your browser — server lookup unavailable, so only raw sizes and names that contain the size can be resolved.",
+    rec_title: "Rule of thumb",
+    rec_small: "Default to Q6_K. Drop to Q5/Q4 only if you want more speed or huge context.",
+    rec_mid: "Default to Q6_K for single-model quality, or Q5_K_M for more side workloads.",
+    rec_large: "Default to Q4_K_M. Use Q5 only when side workloads are light and you want extra quality.",
+    rec_xl: "At 30B and above, start conservative: Q4_K_M first, then test upward.",
+    verdict_title: "Best fit",
+    verdict_none: "No safe fit on this budget — try a smaller model or free up memory.",
+    verdict_note: (rt, budget) => `safe runtime ${rt} GB of ${budget} GB budget`,
+    detected: (mem, chip) => `Your machine: ${mem} GB${chip}`,
+    stat_total: "Total unified memory",
+    stat_os: "Reserved for OS",
+    stat_docker: "Reserved for Docker",
+    stat_budget: "Safe LLM budget",
+    quants_title: "Quantization estimates",
+    th_quant: "Quant",
+    th_weights: "Weights",
+    th_min: "Min total (~1.1×)",
+    th_runtime: "Safe runtime (~1.5×)",
+    th_fit: "Fit",
+    fit_easy: "Easy",
+    fit_possible: "Possible",
+    fit_tight: "Tight",
+    bars_title: "Memory picture at safe runtime (~1.5×)",
+    lg_os: "OS",
+    lg_docker: "Docker",
+    lg_model: "Model (safe runtime)",
+    lg_free: "Free",
+    over_by: (x) => `needs ${x} GB more`,
+    wl_title: "Side workload fit",
+    wl_docker_only: "Docker only",
+    wl_programming: "Programming (mobile/web/backend + IDE + browser)",
+    wl_video_editing: "Light video editing",
+    wl_gaming: "Gaming / heavier graphics workload",
+    wl_reserve: (x) => `reserves ${x} GB`,
+    wl_remaining: (x) => `${x} GB left for the model`,
+    interp_title: "How to read this",
+    interp_easy: ["Easy", "comfortable, with headroom."],
+    interp_possible: ["Possible", "should run; watch context length and concurrent apps."],
+    interp_tight: ["Tight", "likely to swap or feel sluggish; prefer a lower quant or a smaller model."],
+    err_input: "Enter a model name or size first.",
+    err_bad_model: "That model name has unsupported characters or is too long.",
+    err_bad_machine: "Machine memory values look out of range.",
+    err_unresolved: "Couldn't infer the parameter count. Use a name that includes the size (Qwen3-14B) or enter it directly (14b).",
+    err_server: "The server returned an unexpected error.",
+    disclaimer: "Heuristic estimates, not measurements — always test on your machine.",
+    api_hint: "JSON API:",
+    footer_made: "A tiny Rust binary — CLI and web app in one.",
+    dev_title: "For developers & tech users: run it locally",
+    dev_intro: "Running Mulaim on your own machine gives you full observability over which LLMs your hardware can actually handle:",
+    dev_p1: "Auto-detects your real memory and chip — no manual input.",
+    dev_p2: "Reads your installed Ollama models with their true parameter counts.",
+    dev_p3: "Resolves any model from Hugging Face, plus a JSON API for scripts and CI.",
+    dev_web: "Web app",
+    dev_cli: "CLI",
+    dev_docker: "Docker",
+    dev_api: "API",
+    hosted_by: "Hosted & operated by",
+  },
+  ar: {
+    title: "ملائم · Mulaim — فاحص ملاءمة النماذج المحلية",
+    tagline: "هل سيعمل هذا النموذج المحلي بارتياح على جهازك؟ قدّر ذاكرة التكميم (GGUF) مقابل الذاكرة الموحّدة وDocker والأعمال الجانبية.",
+    l_model: "اسم النموذج أو حجمه",
+    model_ph: "12b · qwen3:14b · unsloth/Qwen3-14B-GGUF",
+    l_mem: "كم تبلغ ذاكرة جهازك؟",
+    help_q: "لست متأكدًا؟",
+    help_txt: "ماك: قائمة Apple ← «حول هذا الماك». ويندوز: الإعدادات ← النظام ← «حول». ابحث عن «الذاكرة (RAM)».",
+    adv: "إعدادات متقدمة (تُضبط الحجوزات تلقائيًا)",
+    l_total: "إجمالي الذاكرة الموحّدة (GB)",
+    l_os: "محجوز لنظام التشغيل (GB)",
+    l_docker: "محجوز لـ Docker والخدمات (GB)",
+    check: "افحص الملاءمة",
+    checking: "جارٍ الفحص…",
+    try: "جرّب:",
+    resolved: "مصدر التعرّف",
+    params: (x) => `${x} مليار مُعامل`,
+    source_direct: "حجم مُدخل مباشرة",
+    source_local_ollama: "Ollama المحلي",
+    source_hf_direct: "Hugging Face",
+    source_hf_search: "بحث Hugging Face",
+    source_name_only: "استنتاج من الاسم",
+    note_direct: "أُدخل عدد المُعاملات مباشرة.",
+    note_ollama: "تم التعرّف عبر واجهة Ollama المحلية.",
+    note_ollama_tags: "تمت المطابقة مع قائمة نماذج Ollama المحلية.",
+    note_hf_direct: "تم التعرّف من صفحة النموذج في Hugging Face.",
+    note_hf_search: "تم التعرّف عبر بحث Hugging Face باختيار أقرب نتيجة.",
+    note_name_only: "لا توجد بيانات محلية أو خارجية؛ قُرئ الحجم من الاسم نفسه.",
+    local_note: "حُسبت النتائج في المتصفح — تعذّر الوصول إلى الخادم، لذا لا يمكن التعرّف إلا على الأحجام المباشرة والأسماء المتضمنة للحجم.",
+    rec_title: "قاعدة عامة",
+    rec_small: "اجعل Q6_K خيارك الافتراضي، وانزل إلى Q5/Q4 فقط إذا أردت سرعة أعلى أو سياقًا ضخمًا.",
+    rec_mid: "اجعل Q6_K الافتراضي لأفضل جودة بنموذج واحد، أو Q5_K_M لترك مساحة أكبر للأعمال الجانبية.",
+    rec_large: "اجعل Q4_K_M الافتراضي، واستخدم Q5 فقط عندما تكون الأعمال الجانبية خفيفة وتريد جودة إضافية.",
+    rec_xl: "عند 30 مليار مُعامل فأكثر ابدأ بحذر: جرّب Q4_K_M أولًا ثم اصعد تدريجيًا.",
+    verdict_title: "الخيار الأنسب",
+    verdict_none: "لا يوجد خيار آمن ضمن هذه الميزانية — جرّب نموذجًا أصغر أو وفّر مساحة في الذاكرة.",
+    verdict_note: (rt, budget) => `تشغيل آمن ${rt} GB من ميزانية ${budget} GB`,
+    detected: (mem, chip) => `جهازك: ${mem} GB${chip}`,
+    stat_total: "إجمالي الذاكرة الموحّدة",
+    stat_os: "محجوز للنظام",
+    stat_docker: "محجوز لـ Docker",
+    stat_budget: "الميزانية الآمنة للنموذج",
+    quants_title: "تقديرات التكميم",
+    th_quant: "التكميم",
+    th_weights: "الأوزان",
+    th_min: "حد أدنى (~1.1×)",
+    th_runtime: "تشغيل آمن (~1.5×)",
+    th_fit: "الملاءمة",
+    fit_easy: "مريح",
+    fit_possible: "ممكن",
+    fit_tight: "ضيّق",
+    bars_title: "صورة الذاكرة عند التشغيل الآمن (~1.5×)",
+    lg_os: "النظام",
+    lg_docker: "Docker",
+    lg_model: "النموذج (تشغيل آمن)",
+    lg_free: "متبقٍ",
+    over_by: (x) => `يحتاج ${x} GB إضافية`,
+    wl_title: "الملاءمة مع الأعمال الجانبية",
+    wl_docker_only: "Docker فقط",
+    wl_programming: "برمجة (تطبيقات/ويب/خوادم + بيئة تطوير + متصفح)",
+    wl_video_editing: "مونتاج فيديو خفيف",
+    wl_gaming: "ألعاب / أحمال رسومية أثقل",
+    wl_reserve: (x) => `يحجز ${x} GB`,
+    wl_remaining: (x) => `يتبقى ${x} GB للنموذج`,
+    interp_title: "كيف تقرأ النتائج",
+    interp_easy: ["مريح", "مساحة وفيرة مع هامش أمان."],
+    interp_possible: ["ممكن", "سيعمل غالبًا؛ راقب طول السياق والتطبيقات المتزامنة."],
+    interp_tight: ["ضيّق", "تبديل ذاكرة وبطء محتمل؛ الأفضل تكميم أقل أو نموذج أصغر."],
+    err_input: "أدخل اسم النموذج أو حجمه أولًا.",
+    err_bad_model: "اسم النموذج يحتوي رموزًا غير مدعومة أو أنه طويل جدًا.",
+    err_bad_machine: "قيم الذاكرة المُدخلة خارج النطاق المعقول.",
+    err_unresolved: "تعذّر استنتاج عدد المُعاملات. استخدم اسمًا يتضمن الحجم (مثل Qwen3-14B) أو أدخله مباشرة (مثل 14b).",
+    err_server: "أعاد الخادم خطأً غير متوقع.",
+    disclaimer: "تقديرات إرشادية لا قياسات دقيقة — جرّب دائمًا على جهازك.",
+    api_hint: "واجهة JSON:",
+    footer_made: "برنامج Rust صغير — سطر أوامر وتطبيق ويب معًا.",
+    dev_title: "للمطورين والتقنيين: شغّلها محليًا",
+    dev_intro: "تشغيل «ملائم» على جهازك يمنحك رؤية كاملة لما يستطيع عتادك تشغيله فعلًا من النماذج:",
+    dev_p1: "يكتشف ذاكرة جهازك ومعالجه تلقائيًا — دون إدخال يدوي.",
+    dev_p2: "يقرأ نماذج Ollama المثبتة لديك بأعداد مُعاملاتها الحقيقية.",
+    dev_p3: "يتعرّف على أي نموذج من Hugging Face، مع واجهة JSON للسكربتات وأنظمة CI.",
+    dev_web: "تطبيق الويب",
+    dev_cli: "سطر الأوامر",
+    dev_docker: "Docker",
+    dev_api: "الواجهة البرمجية",
+    hosted_by: "استضافة وتشغيل",
+  },
+};
+
+let lang = detectLang();
+let lastReport = null;
+let lastLocal = false;
+
+function detectLang() {
+  const fromUrl = new URLSearchParams(location.search).get("lang");
+  if (fromUrl === "ar" || fromUrl === "en") return fromUrl;
+  try {
+    const saved = localStorage.getItem("mulaim.lang");
+    if (saved === "ar" || saved === "en") return saved;
+  } catch (e) { /* storage may be unavailable */ }
+  const nav = (navigator.language || "").toLowerCase();
+  if (nav.startsWith("ar")) return "ar";
+  if (nav.startsWith("en")) return "en";
+  return "ar"; // hosted for an Arabic-first audience
+}
+
+function t(key) {
+  const v = I18N[lang][key] ?? I18N.en[key];
+  return v === undefined ? key : v;
+}
+
+/* ---------- formatting ---------- */
+const nf = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const gb = (x) => `<bdi dir="ltr">${nf.format(x)} GB</bdi>`;
+const num = (x) => `<bdi dir="ltr">${nf.format(x)}</bdi>`;
+
+/* ---------- static chrome ---------- */
+const $ = (id) => document.getElementById(id);
+
+function renderStatic() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.title = t("title");
+  document.querySelectorAll(".seg button[data-l]").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.l === lang))
+  );
+  $("tagline").textContent = t("tagline");
+  $("l_model").textContent = t("l_model");
+  $("model").placeholder = t("model_ph");
+  $("l_mem").textContent = t("l_mem");
+  $("helpQ").textContent = t("help_q");
+  $("helpTxt").textContent = t("help_txt");
+  $("advLbl").textContent = t("adv");
+  $("l_total").textContent = t("l_total");
+  $("l_os").textContent = t("l_os");
+  $("l_docker").textContent = t("l_docker");
+  $("checkBtn").textContent = t("check");
+  $("tryLbl").textContent = t("try");
+  $("disclaimer").textContent = t("disclaimer");
+  $("apiHint").textContent = t("api_hint");
+  $("footerMade").textContent = t("footer_made");
+  $("devTitle").textContent = t("dev_title");
+  $("devIntro").textContent = t("dev_intro");
+  $("devP1").textContent = t("dev_p1");
+  $("devP2").textContent = t("dev_p2");
+  $("devP3").textContent = t("dev_p3");
+  $("devWebLbl").textContent = t("dev_web");
+  $("devCliLbl").textContent = t("dev_cli");
+  $("devDockerLbl").textContent = t("dev_docker");
+  $("devApiLbl").textContent = t("dev_api");
+  $("hostedBy").textContent = t("hosted_by");
+  const dn = $("detectedNote");
+  if (dn.dataset.mem) {
+    dn.textContent = t("detected")(
+      nf.format(parseFloat(dn.dataset.mem)),
+      dn.dataset.chip ? ` · ${dn.dataset.chip}` : ""
+    );
+  }
+}
+
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem("mulaim.lang", l); } catch (e) { /* ignore */ }
+  renderStatic();
+  if (lastReport) renderReport(lastReport, lastLocal);
+}
+
+/* ---------- local fallback engine (keep in sync with src/calc.rs / src/resolve.rs) ---------- */
+const QUANTS = [
+  { key: "q3_k_m", label: "Q3_K_M", bpp: 0.49 },
+  { key: "q4_k_m", label: "Q4_K_M", bpp: 0.60 },
+  { key: "q5_k_m", label: "Q5_K_M", bpp: 0.70 },
+  { key: "q6_k",   label: "Q6_K",   bpp: 0.80 },
+  { key: "q8_0",   label: "Q8_0",   bpp: 1.06 },
+];
+const WORKLOADS = [
+  { key: "docker_only",   reserve: 0 },
+  { key: "programming",   reserve: 4 },
+  { key: "video_editing", reserve: 10 },
+  { key: "gaming",        reserve: 12 },
+];
+const fitOf = (req, avail) => (req <= avail * 0.75 ? "easy" : req <= avail ? "possible" : "tight");
+const recKeyOf = (p) => (p <= 10 ? "small" : p <= 20 ? "mid" : p < 30 ? "large" : "xl");
+
+function bestOf(p, budget) {
+  const rec = recKeyOf(p);
+  const prefs = rec === "small" || rec === "mid"
+    ? ["q6_k", "q5_k_m", "q4_k_m", "q3_k_m"]
+    : ["q4_k_m", "q5_k_m", "q3_k_m"];
+  for (const target of ["easy", "possible"]) {
+    for (const key of prefs) {
+      const q = QUANTS.find((x) => x.key === key);
+      const rt = p * q.bpp * 1.5;
+      if (fitOf(rt, budget) === target) {
+        return { key: q.key, label: q.label, fit: target, runtime_total_gb: rt };
+      }
+    }
+  }
+  return null;
+}
+
+function parseRawSize(s) {
+  const n = s.trim().toLowerCase().replace(/gb/g, "").replace(/b/g, "").trim();
+  if (!/^\d*\.?\d+$/.test(n)) return null;
+  const v = parseFloat(n);
+  return v > 0 && v <= 5000 ? v : null;
+}
+function nameHint(s) {
+  for (const tok of s.toLowerCase().replace(/[-_:\/,()"]/g, " ").split(/\s+/)) {
+    const m = /^(\d*\.?\d+)(b|m)$/.exec(tok);
+    if (m) {
+      const v = parseFloat(m[1]) * (m[2] === "b" ? 1 : 0.001);
+      if (v >= 0.05 && v <= 5000) return v;
+    }
+  }
+  return null;
+}
+
+function computeLocal(model, total, os, docker) {
+  const direct = parseRawSize(model);
+  const p = direct ?? nameHint(model);
+  if (p === null) return null;
+  const budget = total - os - docker;
+  const quants = QUANTS.map((q) => {
+    const w = p * q.bpp;
+    return {
+      key: q.key, label: q.label, bytes_per_param: q.bpp,
+      weights_gb: w, formula_total_gb: w * 1.1, runtime_total_gb: w * 1.5,
+      base_fit: fitOf(w * 1.5, budget),
+    };
+  });
+  const workloads = WORKLOADS.map((wl) => {
+    const avail = budget - wl.reserve;
+    return {
+      key: wl.key, name_en: wl.key, reserve_gb: wl.reserve,
+      remaining_budget_gb: Math.max(avail, 0),
+      fits: QUANTS.map((q) => ({ key: q.key, quant: q.label, fit: fitOf(p * q.bpp * 1.5, avail) })),
+    };
+  });
+  return {
+    input: model,
+    source: direct !== null ? "direct" : "name_only",
+    resolved_name: model,
+    note_key: direct !== null ? "note_direct" : "note_name_only",
+    params_b: p,
+    machine: { total_unified_gb: total, os_reserved_gb: os, docker_reserved_gb: docker, llm_budget_gb: budget },
+    recommendation_key: recKeyOf(p),
+    best: bestOf(p, budget),
+    quants, workloads,
+  };
+}
+
+/* ---------- rendering ---------- */
+function chip(fit) {
+  const ic = { easy: "✓", possible: "~", tight: "✕" }[fit] || "?";
+  return `<span class="chip ${fit}"><span class="ic" aria-hidden="true">${ic}</span>${t("fit_" + fit)}</span>`;
+}
+
+function renderReport(r, isLocal) {
+  lastReport = r;
+  lastLocal = isLocal;
+  $("errBanner").classList.add("hidden");
+  $("localBanner").classList.toggle("hidden", !isLocal);
+  if (isLocal) $("localBanner").textContent = t("local_note");
+
+  const srcKey = "source_" + r.source;
+  const noteTxt = t(r.note_key);
+  $("resolution").innerHTML =
+    `${esc(t("resolved"))}: <b>${esc(t(srcKey))}</b> · <bdi dir="ltr"><b>${esc(r.resolved_name)}</b></bdi> · ${t("params")(nf.format(r.params_b))}` +
+    `<span class="note">${esc(noteTxt === r.note_key ? "" : noteTxt)}</span>`;
+
+  $("recTitle").textContent = t("rec_title");
+  $("recText").textContent = t("rec_" + r.recommendation_key);
+
+  const m = r.machine;
+  $("verdictTitle").textContent = t("verdict_title");
+  const vq = $("verdictQuant");
+  if (r.best) {
+    vq.className = "v-quant";
+    vq.innerHTML = `<bdi dir="ltr">${esc(r.best.label)}</bdi>`;
+    $("verdictSide").innerHTML =
+      chip(r.best.fit) +
+      `<div class="v-note"><bdi dir="ltr">${t("verdict_note")(nf.format(r.best.runtime_total_gb), nf.format(m.llm_budget_gb))}</bdi></div>`;
+  } else {
+    vq.className = "v-quant none";
+    vq.textContent = t("verdict_none");
+    $("verdictSide").innerHTML = chip("tight");
+  }
+  $("stats").innerHTML = [
+    ["stat_total", m.total_unified_gb, false],
+    ["stat_os", m.os_reserved_gb, false],
+    ["stat_docker", m.docker_reserved_gb, false],
+    ["stat_budget", m.llm_budget_gb, true],
+  ].map(([k, v, hero]) =>
+    `<div class="stat${hero ? " hero-stat" : ""}"><div class="lbl">${esc(t(k))}</div><div class="val">${num(v)} <small>GB</small></div></div>`
+  ).join("");
+
+  $("quantsTitle").textContent = t("quants_title");
+  $("quantTable").innerHTML =
+    `<thead><tr><th>${esc(t("th_quant"))}</th><th style="text-align:end">${esc(t("th_weights"))}</th>` +
+    `<th style="text-align:end">${esc(t("th_min"))}</th><th style="text-align:end">${esc(t("th_runtime"))}</th><th>${esc(t("th_fit"))}</th></tr></thead>` +
+    `<tbody>` + r.quants.map((q) =>
+      `<tr><td class="qname">${q.label}</td><td class="num">${gb(q.weights_gb)}</td>` +
+      `<td class="num">${gb(q.formula_total_gb)}</td><td class="num">${gb(q.runtime_total_gb)}</td><td>${chip(q.base_fit)}</td></tr>`
+    ).join("") + `</tbody>`;
+
+  $("barsTitle").textContent = t("bars_title");
+  $("barLegend").innerHTML =
+    `<span><i class="sw os"></i>${esc(t("lg_os"))}</span>` +
+    `<span><i class="sw docker"></i>${esc(t("lg_docker"))}</span>` +
+    `<span><i class="sw model"></i>${esc(t("lg_model"))}</span>` +
+    `<span><i class="sw free"></i>${esc(t("lg_free"))}</span>`;
+
+  const total = m.total_unified_gb;
+  const nonModel = m.os_reserved_gb + m.docker_reserved_gb;
+  $("bars").innerHTML = r.quants.map((q) => {
+    const need = q.runtime_total_gb;
+    const shown = Math.max(Math.min(need, total - nonModel), 0);
+    const over = need + nonModel - total;
+    const pct = (x) => (total > 0 ? (100 * x) / total : 0).toFixed(2) + "%";
+    const used = nonModel + need;
+    const overTxt = over > 0.049 ? ` · <span class="over">${t("over_by")(nf.format(over))}</span>` : "";
+    return `<div class="bar-row">
+      <div class="bar-head"><span class="q">${q.label}</span><span class="v"><bdi dir="ltr">${nf.format(used)} / ${nf.format(total)} GB</bdi>${overTxt}</span></div>
+      <div class="bar-track" role="img" aria-label="${esc(q.label)}: ${nf.format(used)}/${nf.format(total)} GB">
+        <span class="seg-b os" style="inline-size:${pct(m.os_reserved_gb)}"></span>
+        <span class="seg-b docker" style="inline-size:${pct(m.docker_reserved_gb)}"></span>
+        <span class="seg-b model" style="inline-size:${pct(shown)}"></span>
+      </div>
+    </div>`;
+  }).join("");
+
+  $("wlTitle").textContent = t("wl_title");
+  $("wlTable").innerHTML =
+    `<thead><tr><th></th>` + r.quants.map((q) => `<th class="qcol">${q.label}</th>`).join("") + `</tr></thead>` +
+    `<tbody>` + r.workloads.map((wl) => {
+      const name = t("wl_" + wl.key);
+      return `<tr><td><div class="wl-name">${esc(name === "wl_" + wl.key ? wl.name_en : name)}</div>` +
+        `<div class="wl-sub">${t("wl_reserve")(nf.format(wl.reserve_gb))} · ${t("wl_remaining")(nf.format(wl.remaining_budget_gb))}</div></td>` +
+        wl.fits.map((f) => `<td>${chip(f.fit)}</td>`).join("") + `</tr>`;
+    }).join("") + `</tbody>`;
+
+  $("interpTitle").textContent = t("interp_title");
+  $("interpList").innerHTML = ["easy", "possible", "tight"].map((k) => {
+    const [w, d] = t("interp_" + k);
+    return `<li><b>${esc(w)}</b> — ${esc(d)}</li>`;
+  }).join("");
+
+  $("results").classList.remove("hidden");
+}
+
+function showError(code) {
+  lastReport = null;
+  $("results").classList.add("hidden");
+  $("localBanner").classList.add("hidden");
+  const key = { bad_model: "err_bad_model", bad_machine: "err_bad_machine", unresolved: "err_unresolved", input: "err_input" }[code] || "err_server";
+  const el = $("errBanner");
+  el.textContent = t(key);
+  el.classList.remove("hidden");
+}
+
+/* ---------- check flow ---------- */
+function readForm() {
+  return {
+    model: $("model").value.trim(),
+    total: parseFloat($("total").value) || 64,
+    os: parseFloat($("os").value) || 0,
+    docker: parseFloat($("docker").value) || 0,
+  };
+}
+
+async function check() {
+  const f = readForm();
+  if (!f.model) { showError("input"); return; }
+  const btn = $("checkBtn");
+  btn.disabled = true;
+  btn.textContent = t("checking");
+  try {
+    const qs = new URLSearchParams({ model: f.model, total: f.total, os: f.os, docker: f.docker });
+    let handled = false;
+    try {
+      const resp = await fetch("/api/check?" + qs.toString(), { headers: { Accept: "application/json" } });
+      if (resp.ok) {
+        renderReport(await resp.json(), false);
+        handled = true;
+      } else {
+        let body = null;
+        try { body = await resp.json(); } catch (e) { /* non-JSON, e.g. static host */ }
+        if (body && body.error) { showError(body.error); handled = true; }
+      }
+    } catch (e) { /* network unavailable — fall through to local */ }
+    if (!handled) {
+      const local = computeLocal(f.model, f.total, f.os, f.docker);
+      if (local) renderReport(local, true); else showError("unresolved");
+    }
+    const share = new URLSearchParams({ model: f.model, total: f.total, os: f.os, docker: f.docker, lang });
+    history.replaceState(null, "", location.pathname + "?" + share.toString());
+  } finally {
+    btn.disabled = false;
+    btn.textContent = t("check");
+  }
+}
+
+/* ---------- memory picker ---------- */
+const MEM_SIZES = [8, 16, 24, 32, 48, 64, 96, 128];
+
+/* Sensible reserves derived from total memory; 64 GB reproduces the
+   server defaults (10 GB OS, 8 GB Docker). Keep in sync with README. */
+function autoReserves(total) {
+  return {
+    os: Math.min(14, Math.max(total <= 8 ? 3 : 4, Math.round(total * 0.155))),
+    docker: Math.min(8, Math.max(2, Math.round(total * 0.12))),
+  };
+}
+
+function syncChips() {
+  const cur = parseFloat($("total").value);
+  document.querySelectorAll("#memChips button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(parseFloat(b.dataset.gb) === cur))
+  );
+}
+
+function buildChips() {
+  $("memChips").innerHTML = MEM_SIZES
+    .map((g) => `<button type="button" data-gb="${g}" dir="ltr">${g} GB</button>`)
+    .join("");
+  document.querySelectorAll("#memChips button").forEach((b) =>
+    b.addEventListener("click", () => {
+      const g = parseFloat(b.dataset.gb);
+      $("total").value = g;
+      const r = autoReserves(g);
+      $("os").value = r.os;
+      $("docker").value = r.docker;
+      syncChips();
+      check();
+    })
+  );
+}
+$("total").addEventListener("input", syncChips);
+
+/* ---------- wire up ---------- */
+document.querySelectorAll(".seg button[data-l]").forEach((b) =>
+  b.addEventListener("click", () => setLang(b.dataset.l))
+);
+$("form").addEventListener("submit", (ev) => { ev.preventDefault(); check(); });
+document.querySelectorAll(".examples button").forEach((b) =>
+  b.addEventListener("click", () => { $("model").value = b.dataset.ex; check(); })
+);
+
+const urlq = new URLSearchParams(location.search);
+if (urlq.get("model")) $("model").value = urlq.get("model");
+for (const k of ["total", "os", "docker"]) {
+  const v = parseFloat(urlq.get(k));
+  if (Number.isFinite(v)) $(k).value = v;
+}
+
+/* When running locally, the server can see the real machine — prefill it.
+   Shared links (explicit total in the URL) win over detection. */
+async function detectMachine() {
+  if (urlq.get("total")) return;
+  try {
+    const resp = await fetch("/api/machine", { headers: { Accept: "application/json" } });
+    if (!resp.ok) return;
+    const j = await resp.json();
+    if (j.detected && j.machine && j.machine.total_unified_gb >= 4) {
+      $("total").value = j.machine.total_unified_gb;
+      syncChips();
+      const dn = $("detectedNote");
+      dn.dataset.mem = j.machine.total_unified_gb;
+      dn.dataset.chip = j.machine.chip || "";
+      dn.textContent = t("detected")(
+        nf.format(j.machine.total_unified_gb),
+        j.machine.chip ? ` · ${j.machine.chip}` : ""
+      );
+      dn.classList.remove("hidden");
+    }
+  } catch (e) { /* static demo or hosted deployment — keep defaults */ }
+}
+
+buildChips();
+renderStatic();
+syncChips();
+detectMachine().then(check);
+</script>
+</body>
+</html>
